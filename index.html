@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drone Simulator - Irrorazione di Precisione</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, white, #004e92 80%);
+            color: #333;
+        }
+        header {
+            background-color: #2c3e50;
+            padding: 15px;
+            text-align: center;
+            color: white;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+        iframe {
+            max-width: 100%;
+            width: 1280px;
+            height: 720px;
+            border: none;
+            border-radius: 10px;
+            margin: 30px 0;
+        }
+        .description {
+            margin: 30px;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            text-align: center;
+            color: #555;
+        }
+        #cubeContainer {
+            width: 1280px;
+            height: 720px;
+            margin: 50px auto;
+            background-color: #d3d3d3; /* Sfondo grigio chiaro */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #fileInputContainer {
+            text-align: center;
+            margin: 20px;
+        }
+        input[type="file"] {
+            padding: 10px;
+            border: 1px solid #3498db;
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Drone Simulator</h1>
+    </header>
+
+    <!-- Contenuto della pagina con descrizione e iframe -->
+    <div class="container">
+        <div class="description">
+            Il progetto <strong>Drone Simulator</strong> permette di simulare il funzionamento dei droni in ambito agricolo, 
+            con un particolare focus sull'irrorazione di precisione. Questa tecnologia offre una soluzione innovativa per 
+            l'ottimizzazione delle risorse, riducendo l'uso di pesticidi e fertilizzanti e migliorando la resa agricola.
+            Scopri come i droni possono essere utilizzati per monitorare e irrorare campi in modo preciso ed efficiente.
+        </div>
+
+        <!-- Frame della tua applicazione Spatial -->
+        <iframe src="https://www.spatial.io/embed/DRones-66eab1a9c49a36d6cb2cf804?share=118419347011295520" allow="camera; fullscreen; autoplay; display-capture; microphone; clipboard-write"></iframe>
+    </div>
+
+    <!-- Player Three.js con cubo verde che ruota -->
+    <div id="cubeContainer"></div>
+
+    <!-- Sezione per caricare un file GLB/GLTF -->
+    <div id="fileInputContainer">
+        <label for="fileInput">Carica un file GLB o GLTF per sostituire il cubo:</label>
+        <input type="file" id="fileInput" accept=".glb,.gltf" />
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://threejs.org/examples/js/loaders/GLTFLoader.js"></script>
+
+    <script>
+        // Inizializzazione della scena
+        const scene = new THREE.Scene();
+
+        // Imposta la camera
+        const camera = new THREE.PerspectiveCamera(75, 1280 / 720, 0.1, 1000);
+        camera.position.set(0, 2, 5);  // Posizionamento della camera
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(1280, 720);
+        renderer.setClearColor(0xd3d3d3); // Sfondo grigio chiaro
+        document.getElementById('cubeContainer').appendChild(renderer.domElement);
+
+        // Creazione di un cubo verde
+        let model;
+        const geometry = new THREE.BoxGeometry();
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Cubo verde
+        let cube = new THREE.Mesh(geometry, material);
+        scene.add(cube);
+
+        // Animazione per far ruotare il cubo o il modello
+        function animate() {
+            requestAnimationFrame(animate);
+            if (cube) {
+                cube.rotation.x += 0.01;
+                cube.rotation.y += 0.01;
+            }
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // GLTF Loader per caricare modelli
+        const loader = new THREE.GLTFLoader();
+
+        // Funzione per caricare e sostituire il cubo con un modello GLB/GLTF
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+
+                // Carica il modello GLB/GLTF
+                loader.load(url, function(gltf) {
+                    if (model) scene.remove(model); // Rimuove il modello precedente
+                    if (cube) scene.remove(cube); // Rimuove il cubo verde
+                    model = gltf.scene;
+                    scene.add(model);
+
+                    // Posiziona il modello più vicino alla telecamera
+                    const box = new THREE.Box3().setFromObject(model);
+                    const size = new THREE.Vector3();
+                    box.getSize(size);
+                    const maxSize = Math.max(size.x, size.y, size.z);
+                    camera.position.set(0, maxSize * 1.5, maxSize * 2);  // Sposta la camera rispetto alle dimensioni del modello
+                    camera.lookAt(0, 0, 0); // Fa puntare la telecamera verso il modello
+
+                    cube = null; // Il cubo viene sostituito
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>
